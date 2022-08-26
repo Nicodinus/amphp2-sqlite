@@ -1,9 +1,10 @@
-/tests            export-ignore
-/.gitattributes   export-ignore
-/.gitignore       export-ignore
-/.php_cs.dist     export-ignore
-/phpunit.xml.dist export-ignore
-/.github          export-ignore
-
-*.php diff=php
-*.phar -diff
+.editorconfig            export-ignore
+.gitattributes           export-ignore
+.gitignore               export-ignore
+.php-cs-fixer.dist.php   export-ignore
+.travis.yml              export-ignore
+CONTRIBUTING.md          export-ignore
+Makefile                 export-ignore
+phpunit.xml.dist         export-ignore
+README.md                export-ignore
+tests/                   export-ignore

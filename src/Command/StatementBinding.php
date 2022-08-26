@@ -8,7 +8,7 @@ use SQLite3Stmt;
 
 trait StatementBinding
 {
-    private function addBindings(SQLite3Stmt $statement)
+    private function addBindings(SQLite3Stmt $statement): void
     {
         foreach ($this->bindings as $key => $value) {
             // https://www.php.net/manual/ru/function.ctype-print.php#123095

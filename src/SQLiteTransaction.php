@@ -47,11 +47,7 @@ class SQLiteTransaction implements Transaction
      */
     public function query(string $sql): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
-        return $this->connection->query($sql);
+        return $this->getAliveConnection()->query($sql);
     }
 
     /**
@@ -60,11 +56,7 @@ class SQLiteTransaction implements Transaction
      */
     public function prepare(string $sql): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
-        return $this->connection->prepare($sql);
+        return $this->getAliveConnection()->prepare($sql);
     }
 
     /**
@@ -73,16 +65,12 @@ class SQLiteTransaction implements Transaction
      */
     public function execute(string $sql, array $params = []): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
-        return $this->connection->execute($sql, $params);
+        return $this->getAliveConnection()->execute($sql, $params);
     }
 
     /**
      * @inheritDoc
-     * @return Promise<null>
+     * @return Promise<void>
      */
     public function close(): Promise
     {
@@ -117,14 +105,12 @@ class SQLiteTransaction implements Transaction
      * @throws ConnectionException
      * @throws FailureException
      * @throws QueryError
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function commit(): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
-        $promise = $this->connection->execute('COMMIT');
+        $promise = $this->getAliveConnection()->execute('COMMIT');
 
         $this->connection = null;
 
@@ -137,14 +123,12 @@ class SQLiteTransaction implements Transaction
      * @throws ConnectionException
      * @throws FailureException
      * @throws QueryError
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function rollback(): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
-        $promise = $this->connection->execute('ROLLBACK');
+        $promise = $this->getAliveConnection()->execute('ROLLBACK');
 
         $this->connection = null;
 
@@ -157,16 +141,14 @@ class SQLiteTransaction implements Transaction
      * @throws ConnectionException
      * @throws FailureException
      * @throws QueryError
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function createSavepoint(string $identifier): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
         $this->validateSavepointIdentifier($identifier);
 
-        return $this->connection->execute("SAVEPOINT {$identifier}");
+        return $this->getAliveConnection()->execute("SAVEPOINT {$identifier}");
     }
 
     /**
@@ -175,16 +157,14 @@ class SQLiteTransaction implements Transaction
      * @throws ConnectionException
      * @throws FailureException
      * @throws QueryError
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function rollbackTo(string $identifier): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
         $this->validateSavepointIdentifier($identifier);
 
-        return $this->connection->execute("ROLLBACK TO {$identifier}");
+        return $this->getAliveConnection()->execute("ROLLBACK TO {$identifier}");
     }
 
     /**
@@ -193,22 +173,22 @@ class SQLiteTransaction implements Transaction
      * @throws ConnectionException
      * @throws FailureException
      * @throws QueryError
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function releaseSavepoint(string $identifier): Promise
     {
-        if (!$this->isAlive()) {
-            throw new TransactionError('Transaction has been closed');
-        }
-
         $this->validateSavepointIdentifier($identifier);
 
-        return $this->connection->execute("RELEASE {$identifier}");
+        return $this->getAliveConnection()->execute("RELEASE {$identifier}");
     }
 
     /**
      * @param string $identifier
+     *
+     * @return void
      */
-    private function validateSavepointIdentifier(string $identifier)
+    private function validateSavepointIdentifier(string $identifier): void
     {
         if (!\preg_match('/^[a-zA-Z_]\w*$/', $identifier)) {
             throw new InvalidArgumentException("Invalid savepoint identifier {$identifier}");
@@ -220,7 +200,8 @@ class SQLiteTransaction implements Transaction
      */
     public function isAlive(): bool
     {
-        return $this->connection && $this->connection->isAlive();
+        /** @psalm-suppress PossiblyNullReference */
+        return $this->isActive() && $this->connection->isAlive();
     }
 
     /**
@@ -229,6 +210,22 @@ class SQLiteTransaction implements Transaction
     public function getLastUsedAt(): int
     {
         // I don't think we need last used timestamp when transaction is closed
-        return $this->connection ? $this->connection->getLastUsedAt() : 0;
+        /** @psalm-suppress PossiblyNullReference */
+        return $this->isActive() ? $this->connection->getLastUsedAt() : 0;
+    }
+
+    /**
+     * @psalm-suppress NullableReturnStatement
+     * @psalm-suppress InvalidNullableReturnType
+     *
+     * @return SQLiteConnection
+     */
+    private function getAliveConnection(): SQLiteConnection
+    {
+        if (!$this->isAlive()) {
+            throw new TransactionError('Transaction has been closed');
+        }
+
+        return $this->connection;
     }
 }

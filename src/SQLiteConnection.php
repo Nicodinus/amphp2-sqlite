@@ -108,7 +108,7 @@ class SQLiteConnection implements Link
 
     /**
      * @inheritDoc
-     * @return Promise<null>
+     * @return Promise<void>
      */
     public function close(): Promise
     {

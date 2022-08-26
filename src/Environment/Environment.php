@@ -15,6 +15,7 @@ class Environment
     public function __construct(SQLite3 $client)
     {
         $this->client = $client;
+        $this->statements = [];
     }
 
     public function getClient(): SQLite3

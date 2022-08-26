@@ -1,11 +1,13 @@
-SQLite client for [amphp](https://amphp.org) using [parallel](https://amphp.org/parallel/)
+# amphp2-sqlite
 
-[![Build Status](https://github.com/vajexal/amp-sqlite/workflows/Build/badge.svg)](https://github.com/vajexal/amp-sqlite/actions)
+![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 
-### Installation
+`nicodinus/amphp2-sqlite` is a non-blocking sqlite client for [amphp:^2.6](https://github.com/amphp/amp) using [parallel](https://amphp.org/parallel/)
+
+## Installation
 
 ```bash
-composer require vajexal/amp-sqlite
+composer require nicodinus/amphp2-sqlite
 ```
 
 ### Usage

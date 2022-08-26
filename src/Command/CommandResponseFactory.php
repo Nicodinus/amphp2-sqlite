@@ -12,7 +12,7 @@ use Vajexal\AmpSQLite\Environment\Environment;
 trait CommandResponseFactory
 {
     /**
-     * @param \SQLite3Result|bool $results
+     * @param \SQLite3Result|false $results
      * @param Environment $environment
      * @return CommandResultResponse|QueryErrorResponse|ResultSetResponse
      */

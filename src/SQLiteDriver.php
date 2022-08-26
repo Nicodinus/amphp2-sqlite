@@ -25,8 +25,12 @@ class SQLiteDriver implements TransientResource
     private int             $lastUsedAt = 0;
     private Mutex           $mutex;
 
-    private function __construct()
+    /**
+     * @param Context\Context $context
+     */
+    private function __construct(Context\Context $context)
     {
+        $this->context = $context;
         $this->mutex = new LocalMutex;
     }
 
@@ -37,16 +41,20 @@ class SQLiteDriver implements TransientResource
 
     /**
      * @param string $filename
-     * @param int|null $flags
+     * @param int $flags
      * @param string|null $encryptionKey
      * @return Promise<self>
      */
-    public static function create(string $filename, int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, string $encryptionKey = ''): Promise
+    public static function create(string $filename, int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, string $encryptionKey = null): Promise
     {
-        return call(function () use ($filename, $flags, $encryptionKey) {
-            $driver = new self;
+        if (!$encryptionKey) {
+            $encryptionKey = '';
+        }
 
-            $driver->context = yield Context\run(__DIR__ . DIRECTORY_SEPARATOR . 'sqlite-worker.php');
+        return call(function () use ($filename, $flags, $encryptionKey) {
+            $context = yield Context\run(__DIR__ . DIRECTORY_SEPARATOR . 'sqlite-worker.php');
+            $driver = new self($context);
+
             $request = new OpenConnectionRequest($filename, $flags, $encryptionKey);
             yield $driver->context->send($request);
 
